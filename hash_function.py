@@ -23,14 +23,11 @@ class hashFunction():
         # else:
         #     self.short_url = temp_short_url
         self.short_url = temp_short_url
-        print(self.short_url)
         return
         
     #Need this as we modify long_url in case of collision 
     def set_long_url(self, long_url):
-        print(long_url)
         self.long_url = long_url
-        print(self.long_url)
 
     def get_short_url(self):
         return self.short_url 
