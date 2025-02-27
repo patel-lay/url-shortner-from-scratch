@@ -6,6 +6,7 @@ import struct
 class backendServer():
     def __init__(self):
         self.message_to_send = b''
+        self.total_response_len = 0
 
     async def send_to_server(self, message):
        # message = "Heellp"
@@ -13,26 +14,55 @@ class backendServer():
             reader, writer = await asyncio.open_connection(EXTERNAL_SERVER_HOST, EXTERNAL_SERVER_PORT)
 
             writer.write(message)  # Send data
-            print("Data send")
             await writer.drain()
-            print("Data send2, waiting to receive")
-
-            response = await reader.read(1024)  # Read response
+            
+            response_len = await reader.read(4)  # Read response
+            total_len = int.from_bytes(response_len, "little")
+            response = await reader.read(total_len)  # Read response
             writer.close()
             await writer.wait_closed()
-            print(response)
-
-            return response.decode()
+            if response == None:
+                return "No response from server"
+            res = self.parse_response(response, total_len)
+            return res
         except Exception as e:
             return f"TCP error: {str(e)}"
 
-    def send_to_server_via_socket(self, message):
-            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.connect((EXTERNAL_SERVER_HOST, EXTERNAL_SERVER_PORT))
-            client_socket.send(message + b'\n')
-            data = client_socket.recv(1024)
-            print(f'Received: {data.decode()}')
-            client_socket.close()
+
+    def parse_response(self, message, total_len):
+
+        index=0
+        return_type = message[index]
+        index+=1
+
+        if return_type == 1:
+            if (total_len < 1 + 8):
+                return "Error in reading err tag"
+        
+            code =  int.from_bytes(message[index:index+4], "little")
+            index+=4
+            len =  int.from_bytes(message[index:index+4], "little")
+            index+=4
+            if (total_len < 1 + 8 + len):
+                return "Size mistach in error response\n"
+                
+            resp = int.from_bytes(message[index:index+4], "little")
+            return resp.decode()
+        if return_type == 2:
+            if(total_len < 1 + 4):  
+                return "Error reading string response\n"
+
+            len = int.from_bytes(message[index:index+4], "little")
+            index+=4
+
+            if(total_len < 1 + 4 + len):
+                return "Error in size of string response\n"
+            
+            resp = message[index:index+len]
+
+            return resp.decode() 
+
+        
 
     def create_tlv(self, value):
         # """Creates a string-length message.
@@ -48,18 +78,24 @@ class backendServer():
     def check_url_exists(self, key):
         message = ["get", key]
         temp_message = b''
+        numstr = len(message)
+        total_len = 4
+        for s in message:
+            total_len+= (4 + len(s))
+        temp_message+=struct.pack("@I", total_len)
+        temp_message+=struct.pack("@I", numstr)
+
         for s in message:
             temp_message+=self.create_tlv(s)
-        self.message_to_send+=self.create_tlv(self, temp_message)
 
-        respone = self.send_to_server(self.message_to_send)
+        response = asyncio.run(self.send_to_server(temp_message))
 
         #TODO: decode the response
-        return response[0]
+        return response
 
     def get_url(self, key):
-        response = self.check_url_exsits(key)
-        return respone
+        response = self.check_url_exists(key)
+        return response
         #TODO: return value        
 
 
@@ -78,7 +114,7 @@ class backendServer():
         print(temp_message)
 
         response = asyncio.run(self.send_to_server(temp_message))
-        print(response)
+        print("set response", response)
         #TODO: decode the response
         return response
 

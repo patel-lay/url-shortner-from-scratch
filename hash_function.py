@@ -15,14 +15,16 @@ class hashFunction():
 
         temp_hash = zlib.crc32(temp_long_url) #8 byte long shortened url
         print(temp_hash)
+        backend = backendServer()
         temp_short_url = self.short_url + str(temp_hash) 
-        # if(BackendServer.check_url_exists(temp_short_url)):
-        #     new_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) # add 8 bytes of predefined string. 
-        #     long_url +=new_string
-        #     self.create_hash(long_url)
-        # else:
-        #     self.short_url = temp_short_url
-        self.short_url = temp_short_url
+        if(backend.check_url_exists(temp_short_url)):
+            new_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8)) # add 8 bytes of predefined string. 
+            long_url +=new_string
+            print("hash already exists")
+            self.create_hash(long_url)
+        else:
+            self.short_url = temp_short_url
+        # self.short_url = temp_short_url
         return
         
     #Need this as we modify long_url in case of collision 
