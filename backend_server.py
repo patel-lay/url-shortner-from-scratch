@@ -7,6 +7,7 @@ class backendServer():
     def __init__(self):
         self.message_to_send = b''
         self.total_response_len = 0
+        self.response = ''
 
     async def send_to_server(self, message):
        # message = "Heellp"
@@ -22,9 +23,9 @@ class backendServer():
             writer.close()
             await writer.wait_closed()
             if response == None:
-                return "No response from server"
-            res = self.parse_response(response, total_len)
-            return res
+                self.response = ""
+            self.response = self.parse_response(response, total_len)
+
         except Exception as e:
             return f"TCP error: {str(e)}"
 
@@ -44,7 +45,7 @@ class backendServer():
             len =  int.from_bytes(message[index:index+4], "little")
             index+=4
             if (total_len < 1 + 8 + len):
-                return "Size mistach in error response\n"
+                return "Size mismatch in error response\n"
                 
             resp = int.from_bytes(message[index:index+4], "little")
             return resp.decode()
@@ -88,15 +89,15 @@ class backendServer():
         for s in message:
             temp_message+=self.create_tlv(s)
 
-        response = asyncio.run(self.send_to_server(temp_message))
-
-        #TODO: decode the response
-        return response
+        asyncio.run(self.send_to_server(temp_message))
+        if self.response is None:
+            return False
+        return True
 
     def get_url(self, key):
-        response = self.check_url_exists(key)
-        return response
-        #TODO: return value        
+        if self.check_url_exists(key):
+            return self.response
+        return "No short url: long url found"
 
 
     def send_url(self, key, value):
@@ -111,10 +112,8 @@ class backendServer():
         for s in message:
             temp_message+=self.create_tlv(s)
         # self.message_to_send+=self.create_tlv(temp_message)
-        print(temp_message)
 
         response = asyncio.run(self.send_to_server(temp_message))
-        print("set response", response)
         #TODO: decode the response
         return response
 
