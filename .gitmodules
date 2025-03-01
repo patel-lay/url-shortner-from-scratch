@@ -1,0 +1,3 @@
+[submodule "redis-from-scratch"]
+	path = redis-from-scratch
+	url = https://github.com/patel-lay/redis-from-scratch
