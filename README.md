@@ -19,6 +19,8 @@ This project is a Flask-based API Gateway and custom-redis server as database th
 - **Protocol:** TCP Sockets
 - **Testing:** Pytest
 
+More Information on Custom redis can be found here: [redis](https://github.com/patel-lay/redis-from-scratch)
+
 ---
 
 ## 🔧 Setup Instructions
@@ -96,6 +98,10 @@ flowchart TD;
     Exists_in_DB --> |Yes and response ==Long_URL: duplicate | Ignore(No Need to do duplicate save);
     Exists_in_DB --> |No: No Collision | SDB(Save to DB);
     Exists_in_DB --> |Yes and response != Long_URL: collision | CM(Long URL + random string);
-
-
 ```
+
+
+### Credits
+This project is inspired by Alex Xu System Design and [Coding Challenge](https://codingchallenges.fyi/challenges/challenge-url-shortener/) by 
+
+Open to feedback and further improvement
