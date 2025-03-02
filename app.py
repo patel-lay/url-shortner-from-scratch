@@ -46,7 +46,7 @@ def get_url():
         long_url = backend.get_url(short_url)
         backend.response = "" #reset response
 
-        return jsonify({"message": "URl parsed successfully", "long_url": long_url, "short_url":short_url}), 302
+        return jsonify({"message":"Long URl retrived successfully", "long_url": long_url, "short_url":short_url}), 302
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
